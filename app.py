@@ -1,6 +1,9 @@
 from flask import Flask, render_template, request, session
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
+
+### TEST -----------------------------------------------
+
 # https://flask-socketio.readthedocs.io/en/latest/
 # https://github.com/socketio/socket.io-client
 
