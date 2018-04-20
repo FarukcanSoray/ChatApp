@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Python Chat App Yo</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <style>
+      div.msg_bbl {
+        background-color: #ddd;
+        padding: 5px 10px;
+        border-radius: 10px;
+        color: #555;
+        margin-bottom: 5px;
+      }
+    </style>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+
+    <div class="text-center well"><b>Hello {{nickname}}!</b></div>
+
+    <div class="container">
+      <div class="col-sm-5">
+        <div class="no_message">
+          <h1 style='color: #ccc'>No message yet..</h1>
+          <div class="message_holder"></div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <form method="POST" class = 'in'>
+          <b>Type your message below <span class="glyphicon glyphicon-arrow-down"></span></b>
+          <div class="clearfix" style="margin-top: 5px;"></div>
+          <input type="text" class="message form-control" placeholder="Messages" id = "message">
+          <div style="padding-top: 5px;"></div>
+          <button type="submit" class="btn btn-success btn-block"><span class="glyphicon glyphicon-send"></span> Send</button>
+        </form>
+          <div style="padding-top: 5px;"></div>
+        <form action = '/' method ="POST" class = 'out'>
+          <button type="submit" class="btn btn-success btn-block" name = "logout"><span class="glyphicon glyphicon-send"></span> Logout</button>
+        </form>
+      </div>
+      <div class = "col-sm-3">
+        <b>Users</b>
+        <div class = "user_holder"></div>
+      </div>
+    </div>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <script>
+      $(document).on('click', 'div[name = "clickable"]', function(){
+        console.log(this.id)
+        console.log('{{nickname}}')
+        if(this.id != '{{nickname}}'){
+        socket.emit('request', {requested : this.id, user_name : '{{nickname}}'})
+        }
+       })
+
+       $(document).on('click', 'button[name = "logout"]', function(){
+         console.log("x")
+        })
+
+      var socket = io.connect( 'http://' + document.domain + ':' + location.port )
+
+      socket.emit('add user', {nickname:'{{nickname}}'})
+
+      socket.on( 'connect', function() {
+        socket.emit( 'print users' )
+
+        var form = $( 'form.in' ).on( 'submit', function( e ) {
+          e.preventDefault()
+        //  socket.disconnect()
+          console.log(socket.connected)
+          let user_name = '{{nickname}}'
+          let user_input = $( '#message' ).val()
+          socket.emit( 'my event', {
+            user_name : user_name,
+            message : user_input
+          } )
+          // empty the input field
+          $( 'input.message' ).val( '' ).focus()
+        } )
+
+        var form2 = $( 'form.in' ).on( 'submit', function( e ) {
+
+        } )
+
+      } )
+
+      // capture message
+      socket.on( 'show message', function( msg ) {
+        if( typeof msg.user_name !== 'undefined' ) {
+          $( 'h1' ).remove()
+          $( 'div.message_holder' ).append( '<div class="msg_bbl"><b style="color: #000">'+msg.user_name+'</b> '+msg.message+'</div>' )
+        }
+      } )
+
+      socket.on( 'print user list', function(info){
+        for(var index in info){
+          var tag;
+          var color;
+          if(index == '{{nickname}}'){
+            tag = 'nonclickable'
+            color = 'red'
+          }
+          else{
+            tag = 'clickable'
+            color = 'black'
+          }
+          $('div.user_holder').append('<div id = "'+index+'" class = "btn btn-success btn-block" name = "'+tag+'"><b style="color: '+color+'">'+index+'</b> '+info[index].ip+' ['+info[index].status+']</div>')
+        }
+      })
+
+      socket.on( 'clear user list', function(){
+        $('div.user_holder').empty()
+      })
+
+
+      socket.on('send request', function(info){
+        let ans = window.confirm(info.user_name + 'anan')
+        socket.emit('permit chat acceptor', {res : ans, sender : info.user_name, acceptor: info.requested})
+      })
+
+      socket.on('permit sender', function(info){
+        socket.emit('permit chat sender', info)
+      })
+
+      socket.on('clear messages', function(){
+        $('div.message_holder').empty()
+      })
+
+      socket.on('ping', function(){
+        socket.emit('pingPy')
+
+      })
+
+      socket.on('control', function(info){
+          info.status = 'ONLINE'
+          socket.emit('still online', info)
+      })
+
+    </script>
+  </body>
+</html>
