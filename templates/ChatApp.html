@@ -131,7 +131,7 @@
 
 
       socket.on('send request', function(info){
-        let ans = window.confirm(info.user_name + 'anan')
+        let ans = window.confirm(info.user_name + 'sizle iletisim kurmak istiyor.')
         socket.emit('permit chat acceptor', {res : ans, sender : info.user_name, acceptor: info.requested})
       })
 
